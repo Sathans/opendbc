@@ -65,6 +65,20 @@ def create_cancel_msg(packer, cancel_msg, cruise_cancel):
   return packer.make_can_msg("CANCEL_MSG", 2, values)
 
 
+def create_acc_accel_msg(packer, acc_accel_msg):
+  values = {s: acc_accel_msg[s] for s in [
+    "PROPILOT_ACCEL_AMOUNT",
+    "PROPILOT_BRAKE_NOT_ACTIVE",
+    "unsure1",
+    "COUNTER",
+  ]}
+
+  # Halve the original propilot accel amount
+  values["PROPILOT_ACCEL_AMOUNT"] = acc_accel_msg["PROPILOT_ACCEL_AMOUNT"] / 2.0
+
+  return packer.make_can_msg("MAYBE_PROPILOT_ACCEL", 2, values)
+
+
 def create_lkas_hud_msg(packer, lkas_hud_msg, enabled, left_line, right_line, left_lane_depart, right_lane_depart):
   values = {s: lkas_hud_msg[s] for s in [
     "LARGE_WARNING_FLASHING",

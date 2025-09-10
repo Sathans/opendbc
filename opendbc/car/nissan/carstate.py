@@ -120,6 +120,10 @@ class CarState(CarStateBase):
 
     self.cruise_throttle_msg = copy.copy(cp.vl["CRUISE_THROTTLE"])
 
+    # Only Leaf vehicles have the MAYBE_PROPILOT_ACCEL message in their DBC
+    if self.CP.carFingerprint in (CAR.NISSAN_LEAF, CAR.NISSAN_LEAF_IC):
+      self.acc_accel_msg = copy.copy(cp.vl["MAYBE_PROPILOT_ACCEL"])
+
     if self.CP.carFingerprint in (CAR.NISSAN_LEAF, CAR.NISSAN_LEAF_IC):
       self.cancel_msg = copy.copy(cp.vl["CANCEL_MSG"])
 

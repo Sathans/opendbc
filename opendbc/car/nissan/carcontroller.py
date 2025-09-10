@@ -54,7 +54,8 @@ class CarController(CarControllerBase):
     # this generates a beep and a warning message every time you disengage
     if self.CP.carFingerprint in (CAR.NISSAN_LEAF, CAR.NISSAN_LEAF_IC) and self.frame % 2 == 0:
       can_sends.append(nissancan.create_cancel_msg(self.packer, CS.cancel_msg, pcm_cancel_cmd))
-
+      can_sends.append(nissancan.create_acc_accel_msg(self.packer, CS.acc_accel_msg))
+      
     can_sends.append(nissancan.create_steering_control(
       self.packer, self.apply_angle_last, self.frame, CC.latActive, lkas_max_torque))
 
