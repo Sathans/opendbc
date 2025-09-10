@@ -52,8 +52,6 @@ def create_brake_command(packer, CAN, apply_brake, pump_on, pcm_override, pcm_ca
   pcm_fault_cmd = False
 
   values = {
-    "COMPUTER_BRAKE": apply_brake,
-    "BRAKE_PUMP_REQUEST": pump_on,
     "CRUISE_OVERRIDE": pcm_override,
     "CRUISE_FAULT_CMD": pcm_fault_cmd,
     "CRUISE_CANCEL_CMD": pcm_cancel_cmd,
@@ -66,6 +64,14 @@ def create_brake_command(packer, CAN, apply_brake, pump_on, pcm_override, pcm_ca
     "AEB_REQ_2": 0,
     "AEB_STATUS": 0,
   }
+
+  if car_fingerprint == CAR.HONDA_CLARITY:
+    values["COMPUTER_BRAKE_ALT"] = apply_brake
+    values["BRAKE_PUMP_REQUEST_ALT"] = apply_brake > 0
+  else:
+    values["COMPUTER_BRAKE"] = apply_brake
+    values["BRAKE_PUMP_REQUEST"] = pump_on
+
   return packer.make_can_msg("BRAKE_COMMAND", CAN.pt, values)
 
 
@@ -131,49 +137,48 @@ def create_bosch_supplemental_1(packer, CAN):
   return packer.make_can_msg("BOSCH_SUPPLEMENTAL_1", CAN.lkas, values)
 
 
-def create_acc_hud(packer, bus, CP, enabled, pcm_speed, pcm_accel, hud_control, hud_v_cruise, is_metric, acc_hud):
-  acc_hud_values = {
-    'CRUISE_SPEED': hud_v_cruise,
-    'ENABLE_MINI_CAR': 1 if enabled else 0,
-    # only moves the lead car without ACC_ON
-    'HUD_DISTANCE': hud_control.leadDistanceBars,  # wraps to 0 at 4 bars
-    'IMPERIAL_UNIT': int(not is_metric),
-    'HUD_LEAD': 2 if enabled and hud_control.leadVisible else 1 if enabled else 0,
-    'SET_ME_X01_2': 1,
-  }
-
-  if CP.carFingerprint in HONDA_BOSCH:
-    acc_hud_values['ACC_ON'] = int(enabled)
-    acc_hud_values['FCM_OFF'] = 1
-    acc_hud_values['FCM_OFF_2'] = 1
-  else:
-    # Shows the distance bars, TODO: stock camera shows updates temporarily while disabled
-    acc_hud_values['ACC_ON'] = int(enabled)
-    acc_hud_values['PCM_SPEED'] = pcm_speed * CV.MS_TO_KPH
-    acc_hud_values['PCM_GAS'] = pcm_accel
-    acc_hud_values['SET_ME_X01'] = 1
-    acc_hud_values['FCM_OFF'] = acc_hud['FCM_OFF']
-    acc_hud_values['FCM_OFF_2'] = acc_hud['FCM_OFF_2']
-    acc_hud_values['FCM_PROBLEM'] = acc_hud['FCM_PROBLEM']
-    acc_hud_values['ICONS'] = acc_hud['ICONS']
-
-  return packer.make_can_msg("ACC_HUD", bus, acc_hud_values)
-
-
-def create_lkas_hud(packer, bus, CP, hud_control, alert_steer_required, lkas_hud):
+def create_ui_commands(packer, CAN, CP, enabled, pcm_speed, hud, is_metric, acc_hud, lkas_hud, lat_active):
   commands = []
+  radar_disabled = CP.carFingerprint in (HONDA_BOSCH - HONDA_BOSCH_RADARLESS) and CP.openpilotLongitudinalControl
+
+  if CP.openpilotLongitudinalControl:
+    acc_hud_values = {
+      'CRUISE_SPEED': hud.v_cruise,
+      'ENABLE_MINI_CAR': 1 if enabled else 0,
+      # only moves the lead car without ACC_ON
+      'HUD_DISTANCE': hud.lead_distance_bars,  # wraps to 0 at 4 bars
+      'IMPERIAL_UNIT': int(not is_metric),
+      'HUD_LEAD': 2 if enabled and hud.lead_visible else 1 if enabled else 0,
+      'SET_ME_X01_2': 1,
+    }
+
+    if CP.carFingerprint in HONDA_BOSCH:
+      acc_hud_values['ACC_ON'] = int(enabled)
+      acc_hud_values['FCM_OFF'] = 1
+      acc_hud_values['FCM_OFF_2'] = 1
+    else:
+      # Shows the distance bars, TODO: stock camera shows updates temporarily while disabled
+      acc_hud_values['ACC_ON'] = int(enabled)
+      acc_hud_values['PCM_SPEED'] = pcm_speed * CV.MS_TO_KPH
+      acc_hud_values['PCM_GAS'] = hud.pcm_accel
+      acc_hud_values['SET_ME_X01'] = 1
+      acc_hud_values['FCM_OFF'] = acc_hud['FCM_OFF']
+      acc_hud_values['FCM_OFF_2'] = acc_hud['FCM_OFF_2']
+      acc_hud_values['FCM_PROBLEM'] = acc_hud['FCM_PROBLEM']
+      acc_hud_values['ICONS'] = acc_hud['ICONS']
+    commands.append(packer.make_can_msg("ACC_HUD", CAN.pt, acc_hud_values))
 
   lkas_hud_values = {
-    'LKAS_READY': 1,
-    'LKAS_STATE_CHANGE': 1,
-    'STEERING_REQUIRED': alert_steer_required,
-    'SOLID_LANES': hud_control.lanesVisible,
+    'SET_ME_X41': 0x41,
+    'STEERING_REQUIRED': hud.steer_required,
+    'SOLID_LANES': lat_active,
+    'DASHED_LANES': hud.dashed_lanes,
     'BEEP': 0,
   }
 
   if CP.carFingerprint in (HONDA_BOSCH_RADARLESS | HONDA_BOSCH_CANFD):
     lkas_hud_values['LANE_LINES'] = 3
-    lkas_hud_values['DASHED_LANES'] = hud_control.lanesVisible
+    lkas_hud_values['DASHED_LANES'] = hud.dashed_lanes
 
     # car likely needs to see LKAS_PROBLEM fall within a specific time frame, so forward from camera
     # TODO: needed for Bosch CAN FD?

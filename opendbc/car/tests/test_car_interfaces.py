@@ -64,8 +64,18 @@ class TestCarInterfaces:
             phases=(Phase.reuse, Phase.generate, Phase.shrink))
   @given(data=st.data())
   def test_car_interfaces(self, car_name, data):
-    car_interface = get_fuzzy_car_interface(car_name, data.draw)
-    car_params = car_interface.CP.as_reader()
+    CarInterface = interfaces[car_name]
+
+    args = get_fuzzy_car_interface_args(data.draw)
+
+    car_params = CarInterface.get_params(car_name, args['fingerprints'], args['car_fw'],
+                                         alpha_long=args['alpha_long'], is_release=False, docs=False)
+    car_params_sp = CarInterface.get_params_sp(car_params, car_name, args['fingerprints'], args['car_fw'],
+                                               alpha_long=args['alpha_long'], docs=False)
+    car_interface = CarInterface(car_params, car_params_sp)
+    assert car_params
+    assert car_params_sp
+    assert car_interface
 
     assert car_params.mass > 1
     assert car_params.wheelbase > 0
@@ -94,9 +104,10 @@ class TestCarInterfaces:
     # TODO: use hypothesis to generate random messages
     now_nanos = 0
     CC = structs.CarControl().as_reader()
+    CC_SP = structs.CarControlSP()
     for _ in range(10):
       car_interface.update([])
-      car_interface.apply(CC, now_nanos)
+      car_interface.apply(CC, CC_SP, now_nanos)
       now_nanos += DT_CTRL * 1e9  # 10 ms
 
     CC = structs.CarControl()
@@ -106,11 +117,11 @@ class TestCarInterfaces:
     CC = CC.as_reader()
     for _ in range(10):
       car_interface.update([])
-      car_interface.apply(CC, now_nanos)
+      car_interface.apply(CC, CC_SP, now_nanos)
       now_nanos += DT_CTRL * 1e9  # 10ms
 
     # Test radar interface
-    radar_interface = car_interface.RadarInterface(car_params)
+    radar_interface = CarInterface.RadarInterface(car_params, car_params_sp)
     assert radar_interface
 
     # Run radar interface once
