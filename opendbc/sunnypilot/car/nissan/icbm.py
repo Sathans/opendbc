@@ -5,7 +5,7 @@ This file is part of sunnypilot and is licensed under the MIT License.
 See the LICENSE.md file in the root directory for more details.
 """
 
-from opendbc.car import DT_CTRL, structs
+from opendbc.car import structs, DT_CTRL
 from opendbc.car.can_definitions import CanData
 from opendbc.sunnypilot.car.intelligent_cruise_button_management_interface_base import IntelligentCruiseButtonManagementInterfaceBase
 from opendbc.car.nissan.nissancan import create_cruise_button_msg
@@ -18,11 +18,10 @@ BUTTON_FIELDS = {
   SendButtonState.decrease: "SET_BUTTON",
 }
 
-
-
 class IntelligentCruiseButtonManagementInterface(IntelligentCruiseButtonManagementInterfaceBase):
   def __init__(self, CP, CP_SP):
     super().__init__(CP, CP_SP)
+    self._last_cruise_throttle_counter = None
 
   def update(self, CS, CC_SP, packer, frame, last_button_frame) -> list[CanData]:
     can_sends: list[CanData] = []
@@ -33,10 +32,6 @@ class IntelligentCruiseButtonManagementInterface(IntelligentCruiseButtonManageme
 
     if self.ICBM.sendButton != SendButtonState.none:
       send_field = BUTTON_FIELDS[self.ICBM.sendButton]
-      
-      if (self.frame - self.last_button_frame) * DT_CTRL > 0.1:
-          counter = (CS.cruise_throttle_msg.get("COUNTER", 0) + 1) % 4
-          can_sends.append(create_cruise_button_msg(packer, self.CP.carFingerprint, CS.cruise_throttle_msg, send_field, counter))
-          if (self.frame - self.last_button_frame) * DT_CTRL > 0.2:
-            self.last_button_frame = self.frame
+      can_sends.append(create_cruise_button_msg(packer, self.CP.carFingerprint, CS.cruise_throttle_msg, send_field))
+
     return can_sends
