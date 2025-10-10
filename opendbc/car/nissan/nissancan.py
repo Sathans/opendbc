@@ -96,6 +96,11 @@ def create_cruise_button_msg(packer, car_fingerprint, cruise_throttle_msg, send_
       "unsure3",
     ]}
 
+  if values["COUNTER"] < 2:
+    values["COUNTER"] += 1
+  elif values["COUNTER"] == 3:
+    return []
+
   # Simulate button press
   values["NO_BUTTON_PRESSED"] = 0
   values["SET_BUTTON"] = 1 if send_button_field == "SET_BUTTON" else 0
