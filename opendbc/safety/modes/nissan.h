@@ -108,10 +108,16 @@ static bool nissan_tx_hook(const CANPacket_t *msg) {
     }
   }
 
-  // acc button check, only allow cancel button to be sent
+  // ACC button checks
+  // Allow only CANCEL, SET, and RES buttons to be sent on X-Trail/Altima (0x20B)
   if (msg->addr == 0x20bU) {
-    // Violation of any button other than cancel is pressed
-    violation |= ((msg->data[1] & 0x3dU) > 0U);
+    // Block PROPILOT, FOLLOW_DISTANCE, and NO_BUTTON_PRESSED
+    violation |= ((msg->data[1] & 0x25U) > 0U);
+  }
+  // Leaf buttons (0x239) share the same semantics, but are located in data[3] (little-endian)
+  if (msg->addr == 0x239U) {
+    // Block PROPILOT (0x01), FOLLOW_DISTANCE (0x04), and NO_BUTTON_PRESSED (0x20)
+    violation |= ((msg->data[3] & 0x25U) > 0U);
   }
 
   if (violation) {
@@ -128,8 +134,15 @@ static safety_config nissan_init(uint16_t param) {
     {0x2b1, 0, 8, .check_relay = true},   // PROPILOT_HUD
     {0x4cc, 0, 8, .check_relay = true},   // PROPILOT_HUD_INFO_MSG
     {0x20b, 2, 6, .check_relay = false},  // CRUISE_THROTTLE (X-Trail)
-    {0x20b, 1, 6, .check_relay = false},  // CRUISE_THROTTLE (Altima)
-    {0x280, 2, 8, .check_relay = true}    // CANCEL_MSG (Leaf)
+    {0x20b, 1, 6, .check_relay = false}   // CRUISE_THROTTLE (Altima)
+  };
+
+  static const CanMsg NISSAN_TX_MSGS_LEAF[] = {
+    {0x169, 0, 8, .check_relay = true},   // LKAS
+    {0x2b1, 0, 8, .check_relay = true},   // PROPILOT_HUD
+    {0x4cc, 0, 8, .check_relay = true},   // PROPILOT_HUD_INFO_MSG
+    {0x239, 2, 8, .check_relay = false},  // CRUISE_THROTTLE (Leaf)
+    {0x280, 2, 8, .check_relay = false}    // CANCEL_MSG (Leaf)
   };
 
   // Signals duplicated below due to the fact that these messages can come in on either CAN bus, depending on car model.
@@ -156,12 +169,14 @@ static safety_config nissan_init(uint16_t param) {
   const bool nissan_leaf = GET_FLAG(current_safety_param_sp, NISSAN_PARAM_SP_LEAF);
 
   safety_config ret;
-  SET_TX_MSGS(NISSAN_TX_MSGS, ret);
   if (nissan_leaf) {
+    SET_TX_MSGS(NISSAN_TX_MSGS_LEAF, ret);
     SET_RX_CHECKS(nissan_leaf_rx_checks, ret);
   } else if (nissan_alt_eps) {
+    SET_TX_MSGS(NISSAN_TX_MSGS, ret);
     SET_RX_CHECKS(nissan_alt_eps_rx_checks, ret);
   } else {
+    SET_TX_MSGS(NISSAN_TX_MSGS, ret);
     SET_RX_CHECKS(nissan_rx_checks, ret);
   }
 
