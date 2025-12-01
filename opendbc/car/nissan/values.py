@@ -15,8 +15,8 @@ class CarControllerParams:
     # When output steering Angle not within range -1311 and 1310,
     #   CANPacker packs wrong angle output to be decoded by panda
     600,  # deg, reasonable limit
-    ([0., 5., 15.], [8., 3, .25]),
-    ([0., 5., 15.], [8., 4, 2]),
+    ([0., 5., 15.], [10., 5., 5.]),
+    ([0., 5., 15.], [10., 5., 5.]),
   )
 
   LKAS_MAX_TORQUE = 2.54               # A value of 1 is easy to overpower
@@ -46,7 +46,7 @@ class NissanCarDocs(CarDocs):
 @dataclass(frozen=True)
 class NissanCarSpecs(CarSpecs):
   centerToFrontRatio: float = 0.44
-  steerRatio: float = 17.
+  steerRatio: float = 16.8
 
 
 @dataclass
@@ -66,7 +66,7 @@ class CAR(Platforms):
   )
   # Leaf with ADAS ECU found behind instrument cluster instead of glovebox
   # Currently the only known difference between them is the inverted seatbelt signal.
-  NISSAN_LEAF_IC = NISSAN_LEAF.override(car_docs=[])
+  NISSAN_LEAF_IC = NISSAN_LEAF.override(car_docs=[NissanCarDocs("Nissan Leaf IC 2018-23")])
   NISSAN_ROGUE = NissanPlatformConfig(
     [NissanCarDocs("Nissan Rogue 2018-20")],
     NissanCarSpecs(mass=1610, wheelbase=2.705)
