@@ -126,7 +126,8 @@ class CarState(CarStateBase, CarStateExt):
     if self.CP.carFingerprint == CAR.NISSAN_ALTIMA:
       ret.invalidLkasSetting = bool(cp.vl["LKAS_SETTINGS"]["LKAS_ENABLED"])
     else:
-      ret.invalidLkasSetting = bool(cp_adas.vl["LKAS_SETTINGS"]["LKAS_ENABLED"])
+      # ret.invalidLkasSetting = bool(cp_adas.vl["LKAS_SETTINGS"]["LKAS_ENABLED"])
+      ret.invalidLkasSetting = False
 
     self.cruise_throttle_msg = copy.copy(cp.vl["CRUISE_THROTTLE"])
 
