@@ -38,12 +38,12 @@ class CarController(CarControllerBase, IntelligentCruiseButtonManagementInterfac
         lkas_max_torque = CarControllerParams.LKAS_MAX_TORQUE
       else:
         # Scale max torque based on how much torque the driver is applying to the wheel
-        lkas_max_torque = max(
-          # Scale max torque down to half LKAX_MAX_TORQUE as a minimum
-          CarControllerParams.LKAS_MAX_TORQUE * 0.5,
-          # Start scaling torque at STEER_THRESHOLD
-          CarControllerParams.LKAS_MAX_TORQUE - 0.6 * max(0, abs(CS.out.steeringTorque) - CarControllerParams.STEER_THRESHOLD)
-        )
+          # Scale torque down to a MIN of 0.5 (20% of full torque)
+        lkas_max_torque = max(CarControllerParams.MIN_TORQUE,
+          # Start scaling torque at STEER_THRESHOLD and scale down to MIN at 2Nm user torque
+          CarControllerParams.LKAS_MAX_TORQUE - (CarControllerParams.LKAS_MAX_TORQUE - CarControllerParams.MIN_TORQUE ) * max(0, abs(CS.out.steeringTorque) - CarControllerParams.STEER_THRESHOLD)
+        )        
+
 
     if self.CP.carFingerprint == CAR.NISSAN_ALTIMA and pcm_cancel_cmd:
       can_sends.append(nissancan.create_acc_cancel_cmd(self.packer, self.car_fingerprint, CS.cruise_throttle_msg))
