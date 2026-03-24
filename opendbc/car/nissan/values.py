@@ -16,7 +16,7 @@ class CarControllerParams:
     #   CANPacker packs wrong angle output to be decoded by panda
     600,  # deg, reasonable limit
     ([0., 5., 15.], [5., .8, .15]),
-    ([0., 5., 15.], [5., 3.5, 0.4]),
+    ([0., 5., 15.], [5., 3.5, 1.5]),
   )
 
   LKAS_MAX_TORQUE = 2.54               # A value of 1 is easy to overpower
