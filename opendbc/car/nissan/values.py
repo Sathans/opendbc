@@ -47,7 +47,7 @@ class NissanCarDocs(CarDocs):
 @dataclass(frozen=True)
 class NissanCarSpecs(CarSpecs):
   centerToFrontRatio: float = 0.44
-  steerRatio: float = 17.
+  steerRatio: float = 17.58
 
 
 @dataclass
