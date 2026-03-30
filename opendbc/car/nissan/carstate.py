@@ -129,9 +129,6 @@ class CarState(CarStateBase, CarStateExt):
 
     self.cruise_throttle_msg = copy.copy(cp.vl["CRUISE_THROTTLE"])
 
-    if self.CP.carFingerprint in (CAR.NISSAN_LEAF, CAR.NISSAN_LEAF_IC):
-      self.cancel_msg = copy.copy(cp.vl["CANCEL_MSG"])
-
     if self.CP.carFingerprint != CAR.NISSAN_ALTIMA:
       self.lkas_hud_msg = copy.copy(cp_adas.vl["PROPILOT_HUD"])
       self.lkas_hud_info_msg = copy.copy(cp_adas.vl["PROPILOT_HUD_INFO_MSG"])
