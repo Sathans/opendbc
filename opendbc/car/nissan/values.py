@@ -19,9 +19,9 @@ class CarControllerParams:
     ([0., 5., 15.], [5., 3.5, 0.4]),
   )
 
-  LKAS_MIN_TORQUE = 0.2             # Adequate torque when overriding without faulting
-  LKAS_MAX_TORQUE = 1               # A value of 1 is easy to overpower
-  STEER_THRESHOLD = 1.0
+  LKAS_MAX_TORQUE = 2.54               # This is the maximum torque
+  STEER_THRESHOLD = 1.0                # Max torque scales down at this user steer 
+  MIN_TORQUE = 0.2                     # Scales down to 0.2 (10% ish of max torque)
 
   def __init__(self, CP):
     pass
@@ -67,7 +67,11 @@ class CAR(Platforms):
   )
   # Leaf with ADAS ECU found behind instrument cluster instead of glovebox
   # Currently the only known difference between them is the inverted seatbelt signal.
-  NISSAN_LEAF_IC = NISSAN_LEAF.override(car_docs=[])
+  NISSAN_LEAF_IC = NissanPlatformConfig(
+    [NissanCarDocs("Nissan Leaf IC 2018-23", video="https://youtu.be/vaMbtAh_0cY")],
+    NissanCarSpecs(mass=1610, wheelbase=2.705),
+    {Bus.pt: 'nissan_leaf_2018_generated'},
+  )
   NISSAN_ROGUE = NissanPlatformConfig(
     [NissanCarDocs("Nissan Rogue 2018-20")],
     NissanCarSpecs(mass=1610, wheelbase=2.705)
