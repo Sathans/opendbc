@@ -49,7 +49,11 @@ class CarController(CarControllerBase, IntelligentCruiseButtonManagementInterfac
     if CC.latActive:
       # Max torque from driver before EPS will give up and not apply torque
       if not bool(CS.out.steeringPressed):
-        lkas_max_torque = CarControllerParams.LKAS_MAX_TORQUE
+        # Add a new torque scaling for when EPS does not wind down fast enough
+        torque_scaling = 1
+        if abs(CS.out.steeringAngleDeg) > abs(self.apply_angle_last):
+          torque_scaling = abs(self.apply_angle_last) / abs(CS.out.steeringAngleDeg)
+        lkas_max_torque = CarControllerParams.LKAS_MAX_TORQUE * torque_scaling
       else:
         # Scale max torque based on how much torque the driver is applying to the wheel.
         # Scale torque down to a MIN of 0.5 (20% of full torque)
