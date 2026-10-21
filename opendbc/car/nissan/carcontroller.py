@@ -71,7 +71,7 @@ class CarController(CarControllerBase, IntelligentCruiseButtonManagementInterfac
       elif icbm_msg:
         can_sends.extend(icbm_msg)
       elif CS.lkas_hud_info_msg["BOTTOM_MSG"] == 4:
-          can_sends.append(nissancan.create_cruise_throttle_msg(self.packer, self.car_fingerprint, CS.cruise_throttle_msg, self.frame, "RES_BUTTON"))
+          can_sends.append(create_cruise_throttle_msg(self.packer, self.car_fingerprint, CS.cruise_throttle_msg, self.frame, "RES_BUTTON"))
       else:
         can_sends.append(create_cruise_throttle_msg(self.packer, self.car_fingerprint, CS.cruise_throttle_msg, self.frame, button))
 
