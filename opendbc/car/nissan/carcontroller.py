@@ -44,7 +44,7 @@ class CarController(CarControllerBase, IntelligentCruiseButtonManagementInterfac
     # # windup slower
     # self.apply_angle_last = apply_std_steer_angle_limits(self.angle_filter.x, self.apply_angle_last, CS.out.vEgoRaw,
     #                                                      CS.out.steeringAngleDeg, CC.latActive, CarControllerParams.ANGLE_LIMITS)
-    self.apply_angle_last = self.angle_filter.x
+    self.apply_angle_last = float(np.clip(self.angle_filter.x, -CarControllerParams.ANGLE_LIMITS.STEER_ANGLE_MAX, CarControllerParams.ANGLE_LIMITS.STEER_ANGLE_MAX))
 
     lkas_max_torque = 0
     if CC.latActive:
