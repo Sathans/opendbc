@@ -81,4 +81,10 @@ class IntelligentCruiseButtonManagementInterface(IntelligentCruiseButtonManageme
           self.button_send_state = ButtonSendState.RELEASE
           self.last_button_frame = self.frame
 
+      elif self.button_send_state == ButtonSendState.IDLE and CS.lkas_hud_info_msg["BOTTOM_MSG"] == 4:
+        # If the car is requesting a button press, send it immediately to avoid a timeout
+        send_button = "RES_BUTTON"
+        self.button_send_state = ButtonSendState.RELEASE
+        self.last_button_frame = self.frame
+
     return [create_cruise_throttle_msg(packer, self.CP.carFingerprint, CS.cruise_throttle_msg, self.frame, send_button)]
