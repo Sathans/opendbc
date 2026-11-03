@@ -35,10 +35,12 @@ class IntelligentCruiseButtonManagementInterface(IntelligentCruiseButtonManageme
     self.button_send_state = ButtonSendState.IDLE
     self.queued_buttons = deque()
     self.prev_buttons = dict.fromkeys(REPLAY_BUTTONS, False)
+    self.bottom_msg_resume_queued = False
 
   def reset(self):
     self.button_send_state = ButtonSendState.IDLE
     self.queued_buttons.clear()
+    self.bottom_msg_resume_queued = False
     self.last_button_frame = self.frame
 
   def update(self, CS, CC_SP, packer, frame, last_button_frame, pcm_cancel_cmd) -> list[CanData]:
@@ -59,6 +61,13 @@ class IntelligentCruiseButtonManagementInterface(IntelligentCruiseButtonManageme
         send_button = "CANCEL_BUTTON"
 
     else:
+      if CS.PROPILOT_HUD_INFO_MSG["BOTTOM_MSG"] == 4:
+        if not self.bottom_msg_resume_queued:
+          self.queued_buttons.append("RES_BUTTON")
+          self.bottom_msg_resume_queued = True
+      else:
+        self.bottom_msg_resume_queued = False
+
       if self.button_send_state == ButtonSendState.IDLE and (self.queued_buttons or self.ICBM.sendButton != SendButtonState.none):
         self.button_send_state = ButtonSendState.RELEASE
 
