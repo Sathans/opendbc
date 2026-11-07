@@ -61,7 +61,7 @@ class IntelligentCruiseButtonManagementInterface(IntelligentCruiseButtonManageme
         send_button = "CANCEL_BUTTON"
 
     else:
-      if CS.PROPILOT_HUD_INFO_MSG["BOTTOM_MSG"] == 4:
+      if CS.lkas_hud_info_msg["BOTTOM_MSG"] == 4:
         if not self.bottom_msg_resume_queued:
           self.queued_buttons.append("RES_BUTTON")
           self.bottom_msg_resume_queued = True
